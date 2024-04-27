@@ -86,6 +86,19 @@ app.get('/tasks/:id', (req, res)=>{
 
 })
 
+//This api is used to demonstrate the chaining of Promise
+app.post('/removeAndFetchNoOfIncompleteTasks/:id', (req, res)=>{
+
+    const _id =  req.params.id
+    Tasks.deleteOne({_id}).then(()=>{
+        return Tasks.countDocuments({completed:false})
+    }).then((count)=>{ //this is the then method of the second chained promise.
+        res.send({message:'No: of tasks', count})
+    }).catch((err)=>{ // exception will be common for all chained promise.
+        res.status(500).send(err.message)
+    })
+})
+
 
 
 app.listen(port, ()=>{
