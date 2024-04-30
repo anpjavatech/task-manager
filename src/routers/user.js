@@ -57,9 +57,9 @@ router.get('/users/me',auth, async (req, res)=>{
     res.send(req.user)
 })
 
-router.patch('/user/:id', async (req, res)=>{
+router.patch('/user/me', auth, async (req, res)=>{
 
-    const _id = req.params.id
+    const _id = req.user._id
     const requestBody = req.body
 
     const updates = Object.keys(req.body)
@@ -71,7 +71,7 @@ router.patch('/user/:id', async (req, res)=>{
     }
 
     try{
-        const user = await User.findById(_id)
+        const user = req.user
         updates.forEach((update)=> user[update] = requestBody[update])
         await user.save()
 
@@ -85,15 +85,12 @@ router.patch('/user/:id', async (req, res)=>{
     }
 })
 
-router.delete('/user/:id', async (req, res)=>{
+router.delete('/user/me', auth, async (req, res)=>{
 
-    const _id = req.params.id
     try{
-        const deletedResponse = await User.deleteOne({_id})
-        if(deletedResponse.deletedCount != 1){
-            return res.status(404).send()
-        }
-        res.send('User deleted.')
+        const user = req.user
+        await user.deleteOne()
+        res.send(req.user)
     }catch(err){
         res.status(400).send(err.message)
     }
