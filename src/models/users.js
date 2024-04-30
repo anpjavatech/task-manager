@@ -43,6 +43,12 @@ import jwt from "jsonwebtoken"
     }]
   })
 
+  UserSchema.virtual('tasks', {
+    ref:'Tasks',
+    localField:'_id',
+    foreignField:'owner'
+  })
+
   UserSchema.methods.toJSON = function (){
     const userObject = this.toObject()
     delete userObject.password

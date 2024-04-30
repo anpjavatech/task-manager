@@ -1,12 +1,13 @@
 import express from 'express'
 import mongoose from '../db/mongoose.js'
 import Tasks from '../models/tasks.js'
+import auth from '../middleware/auth.js'
 
 const router = express.Router()
 
-router.post('/tasks', async (req, res)=>{
+router.post('/tasks', auth, async (req, res)=>{
     const requestBody = req.body
-    const task = new Tasks(requestBody)
+    const task = new Tasks({...requestBody, owner: req.user._id})
 
     try{
         const insertedTask = await task.save()
@@ -16,22 +17,23 @@ router.post('/tasks', async (req, res)=>{
     }
 })
 
-router.get('/tasks', async (req, res)=>{
+router.get('/tasks', auth, async (req, res)=>{
 
     try{
-        const tasks = await Tasks.find({})
-        res.send(tasks)
+        //const tasks = await Tasks.find({owner:req.user._id}) Also a valid way to fetch the data.
+        await req.user.populate('tasks')
+        res.send(req.user.tasks)
     }catch(err){
         res.status(500).send(err.message)
     }
     
 })
 
-router.get('/tasks/:id', async (req, res)=>{
+router.get('/tasks/:id', auth, async (req, res)=>{
     const _id = req.params.id
 
     try{
-        const task = await Tasks.findById(_id)
+        const task = await Tasks.findOne({_id, owner:req.user._id})
         if(!task){
             return res.status(400).send({message:'Task not found.', task:{}})
         }
