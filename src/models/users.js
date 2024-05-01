@@ -41,7 +41,10 @@ import Tasks from "./tasks.js";
             type: String,
             required: true
         }
-    }]
+    }],
+    avatar:{
+      type: Buffer
+    }
   },{
     timestamps:true
   })
@@ -56,6 +59,7 @@ import Tasks from "./tasks.js";
     const userObject = this.toObject()
     delete userObject.password
     delete userObject.tokens
+    delete userObject.avatar
 
     return userObject
   }

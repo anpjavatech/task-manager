@@ -3,8 +3,55 @@ import mongoose from '../db/mongoose.js'
 import User from '../models/users.js'
 import bcrypt from 'bcryptjs'
 import auth from '../middleware/auth.js'
+import multer from 'multer'
+import sharp from 'sharp'
 
 const router = express.Router()
+const upload = multer({
+    limits:{
+        fileSize: 1000000
+    },
+    fileFilter: (req, file, cb)=>{
+        if(!file.originalname.match(/\.(jpg|jpeg|png)$/)){
+            return cb(new Error('Please upload an image.'))
+        }
+        cb(undefined, true)
+    }
+})
+
+router.post('/users/me/avatar', auth, upload.single('avatar'), async (req, res)=>{
+
+    req.user.avatar = await sharp(req.file.buffer).resize({width:300, height:300}).png().toBuffer()
+    await req.user.save()
+    res.send()
+}, (error, req, res, next)=>{ // to handle the error to return in json format
+    res.status(400).send({error:error.message})
+})
+
+router.delete('/users/me/avatar', auth, async (req, res)=>{
+
+    req.user.avatar = undefined
+    await req.user.save()
+    res.send()
+})
+
+router.get('/users/:id/avatar', async (req, res)=>{
+
+    try{
+        const _id = req.params.id
+        const user = await User.findById({_id})
+        const avatar = user.avatar
+        if(avatar === undefined){
+            throw new Error('No avatar existing.')
+        }
+    
+        res.set('Content-Type', 'image/jpg')
+        res.send(avatar)
+    }catch(err){
+        res.status(400).send(err.message)
+    }
+    
+})
 
 router.post('/users/login', async (req, res)=>{
     const reqBody = req.body
