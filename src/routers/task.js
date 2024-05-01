@@ -19,9 +19,29 @@ router.post('/tasks', auth, async (req, res)=>{
 
 router.get('/tasks', auth, async (req, res)=>{
 
+    const match = {}
+    const sort = {}
+
+    if(req.query.completed){
+        match.completed=req.query.
+        completed === 'true'
+    }
+
+    if(req.query.sortBy){
+        const parts = req.query.sortBy.split(':')
+        sort[parts[0]] = parts[1]==='desc'?-1:1
+    }
+
     try{
-        //const tasks = await Tasks.find({owner:req.user._id}) Also a valid way to fetch the data.
-        await req.user.populate('tasks')
+        const completed = req.query.completed === 'true'
+        await req.user.populate({
+            path:'tasks', 
+            match, 
+            options: {
+                limit: parseInt(req.query.limit),
+                skip: parseInt(req.query.skip),
+                sort
+            }})
         res.send(req.user.tasks)
     }catch(err){
         res.status(500).send(err.message)
@@ -44,20 +64,7 @@ router.get('/tasks/:id', auth, async (req, res)=>{
 
 })
 
-//This api is used to demonstrate the chaining of Promise
-router.post('/removeAndFetchNoOfIncompleteTasks/:id', async (req, res)=>{
-
-    const _id =  req.params.id
-    try{
-        const removeResponse = await Tasks.deleteOne({id})
-        const count = await Tasks.countDocuments({completed:false})
-        res.send({message:'No: of tasks', count})
-    }catch(err){
-        res.status(500).send(err.message)
-    }
-})
-
-router.patch('/task/:id', async (req, res)=>{
+router.patch('/task/:id', auth, async (req, res)=>{
 
     const _id = req.params.id
     const requestBody = req.body
@@ -71,25 +78,26 @@ router.patch('/task/:id', async (req, res)=>{
     }
 
     try{
-        const task = await Tasks.findById(_id)
-        updates.forEach((update)=>task[update] = requestBody[update])
-        task.save()
+
+        const task = await Tasks.findOne({_id, owner:req.user._id})
 
         if(!task){
             return res.status(404).send()
         }
 
+        updates.forEach((update)=>task[update] = requestBody[update])
+        task.save()
         res.send(task)
     }catch(err){
         res.status(400).send(err.message)
     }
 })
 
-router.delete('/task/:id', async (req, res)=>{
+router.delete('/task/:id', auth, async (req, res)=>{
 
     const _id = req.params.id
     try{
-        const task = await Tasks.findByIdAndDelete({_id})
+        const task = await Tasks.findOneAndDelete({_id, owner:req.user._id})
         if(!task){
             return res.status(404).send()
         }

@@ -2,6 +2,7 @@ import mongoose from "mongoose"
 import validator from 'validator';
 import bcryptjs from 'bcryptjs'
 import jwt from "jsonwebtoken"
+import Tasks from "./tasks.js";
 
   //create schema
   const UserSchema = mongoose.Schema({
@@ -41,6 +42,8 @@ import jwt from "jsonwebtoken"
             required: true
         }
     }]
+  },{
+    timestamps:true
   })
 
   UserSchema.virtual('tasks', {
@@ -87,6 +90,12 @@ import jwt from "jsonwebtoken"
         this.password = await bcryptjs.hash(this.password, 8)
     }
 
+    next()
+  })
+
+  UserSchema.pre('deleteOne', { document: true, query: false }, async function (next){
+
+    await Tasks.deleteMany({owner:this._id})
     next()
   })
 
