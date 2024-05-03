@@ -4,6 +4,8 @@ import bcryptjs from 'bcryptjs'
 import jwt from "jsonwebtoken"
 import Tasks from "./tasks.js";
 
+const JWT_SECRET = process.env.JWT_SECRET
+
   //create schema
   const UserSchema = mongoose.Schema({
     name:{
@@ -66,7 +68,7 @@ import Tasks from "./tasks.js";
 
   UserSchema.methods.generateAuthToken = async function (){
 
-    const token = jwt.sign({_id:this._id}, "thisismyfirstjwttokengenertion", {expiresIn:'1h'})
+    const token = jwt.sign({_id:this._id}, JWT_SECRET, {expiresIn:'1h'})
     this.tokens = this.tokens.concat({token})
     await this.save()
 
