@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 
-mongoose.connect("mongodb+srv://anoopks007:HadGwNtJM7CfatzP@anpks.ocn2esk.mongodb.net/task_manager?retryWrites=true&w=majority&appName=Anpks")
+const MONGODB_URL = process.env.MONGODB_URL
+mongoose.connect(MONGODB_URL)
   .then(() => console.log('Mongo DB is successfully connected!'));
 
 

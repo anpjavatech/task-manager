@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs'
 import auth from '../middleware/auth.js'
 import multer from 'multer'
 import sharp from 'sharp'
+import sendWelcomeEmail, { sendCancellationEmail } from '../email/account.js'
 
 const router = express.Router()
 const upload = multer({
@@ -93,6 +94,7 @@ router.post('/users', async (req, res)=>{
 
     try{
         const insertedUser = await user.save()
+        sendWelcomeEmail(user.email, user.name)
         const token = await user.generateAuthToken()
         res.send({insertedUser, token})
     }catch(error){
@@ -137,6 +139,7 @@ router.delete('/user/me', auth, async (req, res)=>{
     try{
         const user = req.user
         await user.deleteOne()
+        sendCancellationEmail(user.email, user.name)
         res.send(req.user)
     }catch(err){
         res.status(400).send(err.message)

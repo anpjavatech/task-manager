@@ -4,7 +4,7 @@ import taskRouter from './routers/task.js'
 
 
 const app = express()
-const port = process.env.PORT || 3001
+const port = process.env.PORT
 
 //express json parser
 app.use(express.json())
